@@ -1,5 +1,7 @@
 # openclaw agent run governor
 
+**this is a living document**
+
 a lightweight governance layer for autonomous ai agent workflows.
 
 most builders focus on the brain of the agent:
