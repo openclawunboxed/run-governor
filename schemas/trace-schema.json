@@ -1,0 +1,27 @@
+{
+  "title": "agent_run_trace",
+  "type": "object",
+  "required": [
+    "run_id",
+    "workflow_name",
+    "agent_name",
+    "steps"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string"
+    },
+    "workflow_name": {
+      "type": "string"
+    },
+    "agent_name": {
+      "type": "string"
+    },
+    "steps": {
+      "type": "array"
+    },
+    "final_status": {
+      "type": "string"
+    }
+  }
+}
