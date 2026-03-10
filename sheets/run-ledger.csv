@@ -1,0 +1,2 @@
+run_id,timestamp,workflow_name,agent_name,model_used,model_lane,llm_calls,tool_calls,total_tokens,estimated_cost_usd,run_duration_seconds,final_status,confidence_score,approval_required,approval_granted,loop_detected,notes
+example_run_001,2026-01-01T10:02:11Z,browser_research_agent,research_agent,mistral-small,cheap_api_middle,6,3,4100,0.03,42,success,0.86,false,false,false,normal run
