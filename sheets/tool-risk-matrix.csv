@@ -1,0 +1,5 @@
+tool_name,risk_class,approval_required,allowed_by_default,max_calls_per_run,notes
+browser_read,low,false,true,20,read-only browser retrieval
+browser_click,medium,true,true,10,clicking can trigger state changes
+send_email,high,true,false,3,external communication
+shell_exec,critical,true,false,3,command execution risk
