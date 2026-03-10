@@ -1,0 +1,12 @@
+{
+  "max_steps": 50,
+  "max_tool_calls": 25,
+  "loop_signature_window": 5,
+  "loop_threshold": 3,
+  "approval_required_tools": [
+    "send_email",
+    "post_social",
+    "shell_exec",
+    "deploy_code"
+  ]
+}
