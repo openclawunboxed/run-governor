@@ -1,0 +1,21 @@
+{
+  "lanes": {
+    "local_floor": [
+      "llama3-8b",
+      "qwen-small"
+    ],
+    "cheap_api_middle": [
+      "mistral-small",
+      "gpt-4o-mini"
+    ],
+    "premium_ceiling": [
+      "claude-opus",
+      "gpt-4.1"
+    ]
+  },
+  "routing_rules": {
+    "simple_tasks": "local_floor",
+    "structured_tasks": "cheap_api_middle",
+    "complex_reasoning": "premium_ceiling"
+  }
+}
