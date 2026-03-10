@@ -1,0 +1,16 @@
+{
+  "read_only": [
+    "search",
+    "scrape",
+    "retrieve"
+  ],
+  "internal_write": [
+    "database_update",
+    "memory_write"
+  ],
+  "external_write": [
+    "send_email",
+    "post_social",
+    "make_payment"
+  ]
+}
