@@ -27,6 +27,40 @@ The Run Governor adds a safety layer underneath an agent workflow to control how
 
 # What the Governor Controls
 
+# Architecture
+
+The Run Governor sits between your agent logic and the outside world.
+
+Agent workflow  
+↓  
+Run Governor  
+↓  
+Policies and limits  
+↓  
+Tool execution  
+↓  
+Trace logging and run ledger
+
+During a run the governor observes every step and enforces constraints.
+
+Example flow:
+
+agent step  
+↓  
+governor records step event  
+↓  
+agent requests tool  
+↓  
+governor checks policy and limits  
+↓  
+tool executes  
+↓  
+governor records trace event  
+↓  
+run continues or stops if limits are exceeded
+
+This separation keeps the agent logic simple while the governor handles safety, budgeting, and observability.
+
 During a run the governor enforces limits and records events.
 
 It answers questions like:
