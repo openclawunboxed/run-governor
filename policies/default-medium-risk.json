@@ -1,12 +1,19 @@
 {
   "max_steps": 50,
   "max_tool_calls": 25,
+  "max_llm_calls": 25,
+  "max_cost_usd": 1.0,
+  "max_wall_clock_seconds": 300,
+  "max_retries_per_step": 2,
   "loop_signature_window": 5,
   "loop_threshold": 3,
   "approval_required_tools": [
     "send_email",
     "post_social",
     "shell_exec",
-    "deploy_code"
+    "deploy_code",
+    "make_payment",
+    "database_update",
+    "submit_form"
   ]
 }
