@@ -1,5 +1,19 @@
 const crypto = require("crypto")
 
+function stableStringify(value) {
+  if (value === null || typeof value !== "object") {
+    return JSON.stringify(value)
+  }
+
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(",")}]`
+  }
+
+  const keys = Object.keys(value).sort()
+  const items = keys.map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`)
+  return `{${items.join(",")}}`
+}
+
 class RunGovernor {
   constructor({
     maxSteps = 50,
@@ -38,7 +52,7 @@ class RunGovernor {
   }
 
   checkTimeout() {
-    const elapsedSeconds = this.now() - this.startedAt / 1000
+    const elapsedSeconds = this.now() - (this.startedAt / 1000)
     if (elapsedSeconds > this.maxWallClockSeconds) {
       throw new Error("wall clock time limit exceeded")
     }
@@ -51,8 +65,7 @@ class RunGovernor {
   }
 
   makeToolSignature(toolName, args = {}) {
-    const normalizedArgs = JSON.stringify(args)
-    const raw = `${toolName}:${normalizedArgs}`
+    const raw = `${toolName}:${stableStringify(args)}`
     return crypto.createHash("sha256").update(raw).digest("hex")
   }
 
@@ -170,7 +183,7 @@ class RunGovernor {
       tool_calls: this.toolCalls,
       llm_calls: this.llmCalls,
       cost_usd: Number(this.costUsd.toFixed(6)),
-      elapsed_seconds: Number((this.now() - this.startedAt / 1000).toFixed(3))
+      elapsed_seconds: Number((this.now() - (this.startedAt / 1000)).toFixed(3))
     }
   }
 
