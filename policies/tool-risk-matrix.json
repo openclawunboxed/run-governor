@@ -1,0 +1,28 @@
+{
+  "read_only": [
+    "search",
+    "scrape",
+    "retrieve",
+    "read_file",
+    "view_page"
+  ],
+  "internal_write": [
+    "database_update",
+    "memory_write",
+    "create_note",
+    "update_internal_doc"
+  ],
+  "external_write": [
+    "send_email",
+    "post_social",
+    "make_payment",
+    "submit_form",
+    "write_crm"
+  ],
+  "system_exec": [
+    "shell_exec",
+    "deploy_code",
+    "delete_file",
+    "restart_service"
+  ]
+}
