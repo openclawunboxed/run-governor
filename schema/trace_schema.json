@@ -1,0 +1,14 @@
+{
+  "run_id": "",
+  "workflow": "",
+  "step_index": 0,
+  "model": "",
+  "tool": "",
+  "arguments": {},
+  "tool_signature_hash": "",
+  "tokens": 0,
+  "cost_usd": 0,
+  "latency_ms": 0,
+  "status": "",
+  "summary": ""
+}
