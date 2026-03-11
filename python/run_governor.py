@@ -50,9 +50,11 @@ class RunGovernor:
         if self.cost_usd > self.max_cost_usd:
             raise RuntimeError("cost limit exceeded")
 
+    def _stable_json(self, value: Any) -> str:
+        return json.dumps(value or {}, sort_keys=True, separators=(",", ":"), default=str)
+
     def _make_tool_signature(self, tool_name: str, arguments: Optional[Dict[str, Any]]) -> str:
-        normalized_args = json.dumps(arguments or {}, sort_keys=True, default=str)
-        raw = f"{tool_name}:{normalized_args}"
+        raw = f"{tool_name}:{self._stable_json(arguments)}"
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
     def _check_loop_guard(self, signature: str) -> None:
