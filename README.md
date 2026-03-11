@@ -1,450 +1,223 @@
-# openclaw agent run governor
+# Run Governor
 
-**this is a living document**
+A lightweight runtime governance layer for agent workflows.
 
-a lightweight governance layer for autonomous ai agent workflows.
+Most agent builders focus on the **brain**:
 
-most builders focus on the brain of the agent:
+- better models
+- more tools
+- more context
+- more memory
 
-- better models  
-- more tools  
-- bigger context  
-- more memory  
-- more routing  
+Then the agent finally touches real work and the problems show up.
 
-then the stack finally does real work and the real problems show up.
+Runs get stuck.  
+Tools repeat endlessly.  
+Costs spike.  
+Logs are useless.  
+The system almost performs actions you never intended.
 
-the run gets stuck.  
-the same tool fires again.  
-the browser agent keeps wandering.  
-the cost climbs.  
-the trace is useless.  
-the system almost does something you did not actually mean.
+That is not a model problem.
 
-that is not just a model problem.
+It is a **runtime governance problem**.
 
-that is a runtime governance problem.
-
-this repo gives you a **run governor**.
-
-a small control layer that sits underneath your workflow and decides:
-
-- how much a run can spend  
-- how many steps it can take  
-- which tools are allowed  
-- which tools need approval  
-- when the run is clearly stuck  
-- what gets logged  
-- how the run gets scored  
-- which model lane the task should use  
-
-the goal is simple:
-
-turn fragile agent demos into controlled systems you can actually trust with real work.
+The Run Governor adds a safety layer underneath an agent workflow to control how runs behave.
 
 ---
 
-## what this repo includes
+# What the Governor Controls
 
-- run governance for agent loops  
-- approval gates for risky actions  
-- tool risk classification  
-- duplicate tool-call guards  
-- hybrid model routing ladder  
-- trace schema for run auditing  
-- run scoring for workflow evaluation  
-- reference implementation patterns for python and node builders  
+During a run the governor enforces limits and records events.
 
----
+It answers questions like:
 
-## who this is for
+- how many steps can the run take
+- how many tool calls are allowed
+- how many LLM calls are allowed
+- how much money can the run spend
+- when a loop should be stopped
+- which tools are safe to execute
+- how the run should be logged
+- how the run should be scored afterward
 
-this repo is for builders running:
+Without these controls agents behave like demos.
 
-- openclaw agents  
-- browser agents  
-- research agents  
-- developer copilots  
-- internal workflow automation  
-- ai operators moving beyond demos  
-
-if your agent can spend money, call tools, write data, or trigger external actions, you should add governance before using it on real work.
+With them they start behaving like systems.
 
 ---
 
-## the core idea
+# Core Ideas
 
-in this architecture, the governor sits between your workflow and the tools or models.
+## Budget Caps
 
-```
-agent workflow
-      │
-      ▼
-run governor
-      │
-      ├── step limit
-      ├── cost cap
-      ├── retry limit
-      ├── duplicate tool-call guard
-      ├── approval gate
-      ├── trace logging
-      ├── run scoring
-      └── model router
-      │
-      ▼
-tools and models
-```
+Each run has limits:
 
-every action should pass through the governor before execution.
+- max steps
+- max tool calls
+- max LLM calls
+- max cost
+- max runtime
 
-this means:
-
-- tool calls can be inspected  
-- model calls can be routed  
-- steps can be limited  
-- risky actions can require approval  
-- every run can be logged and replayed  
+Without caps agents eventually burn time or money.
 
 ---
 
-## the five core rules
+## Loop Guards
 
-### 1. cap spend per run
+Agents frequently repeat the same tool calls.
 
-provider dashboards are not enough.
+Example:
 
-each run should have limits such as:
+search → fail  
+search → fail  
+search → fail
 
-- max cost per run  
-- max llm calls  
-- max tool calls  
-- max wall clock time  
-- max retries per step  
-
-if you only notice problems after the bill arrives, you never had control.
-
-you had a receipt.
+The governor fingerprints tool calls and stops runs when identical calls repeat too many times.
 
 ---
 
-### 2. fingerprint repeated tool calls
+## Tool Risk Levels
 
-agents often repeat the same tool call when confused.
+Tools are separated into categories.
 
-the governor can fingerprint tool calls using something like:
+| Category | Example |
+|--------|--------|
+| read_only | search, scrape |
+| internal_write | memory updates |
+| external_write | email, social posting |
+| system_exec | shell commands |
 
-```
-tool_signature = hash(tool_name + normalized_args)
-```
+Higher-risk tools can require human approval.
 
-if the same signature appears repeatedly during a run, the governor can stop execution.
+Configuration lives in:
 
-this can eliminate a large amount of wasted behavior from:
-
-- browser wandering  
-- bad retries  
-- stuck loops  
-- malformed orchestration  
+policies/tool_risk_matrix.json
 
 ---
 
-### 3. separate reading from writing
+## Trace Logging
 
-not all tools carry the same risk.
+Every run emits structured events:
 
-use three buckets.
+- step events
+- tool calls
+- LLM calls
+- retries
 
-#### read only
+These follow the schema in:
 
-- search  
-- scraping  
-- retrieval  
-- page parsing  
+schema/trace_schema.json
 
-#### internal write
-
-- database updates  
-- crm notes  
-- memory writes  
-- internal docs  
-
-#### external write or irreversible action
-
-- emails  
-- payments  
-- social posts  
-- deletes  
-- account changes  
-
-external and irreversible actions should typically require approval.
+If something breaks you should be able to reconstruct the run.
 
 ---
 
-### 4. log every step
+## Run Scoring
 
-if something breaks and you cannot replay the run, the system is not serious.
+Producing the correct answer is not enough.
 
-every run should log information such as:
+Runs can also be evaluated for:
 
-- workflow name  
-- run id  
-- step index  
-- model used  
-- tool used  
-- arguments  
-- tool signature hash  
-- tokens used  
-- cost  
-- latency  
-- confidence  
-- status  
-- stop reason  
-- summary  
-- approval required  
-- approval result  
+- budget discipline
+- tool relevance
+- retry behavior
+- escalation timing
+- safety compliance
 
-this gives you real observability instead of guesswork.
+See:
+
+prompts/run-scorer-prompt.txt
+
+These prompts are included as assets.  
+They are not automatically wired into the governor.
 
 ---
 
-### 5. score the run
+## Hybrid Model Ladder
 
-a run can produce the correct output while still behaving poorly operationally.
+Not every task deserves a premium model.
 
-for example:
+A simple model ladder can allocate work across three lanes.
 
-- it took too many steps  
-- it escalated to a premium model too early  
-- it retried the same thing too many times  
-- it used too many tools for a simple task  
+Lane 1 — Local models  
+Lane 2 — Cheap API models  
+Lane 3 — Premium reasoning models
 
-you should score how the run behaved, not just whether the final output looked acceptable.
+Example configuration:
 
-recommended scoring areas:
-
-- output quality  
-- step efficiency  
-- token efficiency  
-- tool efficiency  
-- escalation timing  
-- safety behavior  
+policies/local-free-premium-ladder.json
 
 ---
 
-## the hybrid model ladder
+# Repository Structure
 
-many stacks fall into one of three defaults:
+node/
+    runGovernor.js
+    exampleAgentLoop.js
 
-- local model everywhere  
-- cheap api everywhere  
-- premium model everywhere  
-
-a better structure is a ladder.
-
-### lane 1 — local floor
-
-use local models for:
-
-- routing  
-- classification  
-- extraction  
-- heartbeat checks  
-- cron tasks  
-- cheap retries  
-- simple parsing  
-
-the goal is not perfection.
-
-the goal is cheap, private, resilient baseline behavior.
-
----
-
-### lane 2 — cheap api middle
-
-use affordable api models for:
-
-- summaries  
-- standard research  
-- routine writing  
-- normal code help  
-- workflow orchestration  
-
-most agent work should live here.
-
----
-
-### lane 3 — premium ceiling
-
-reserve premium models for:
-
-- complex debugging  
-- advanced coding tasks  
-- large context reasoning  
-- high-risk decisions  
-- final synthesis  
-
-the governor rule is simple:
-
-**what is the cheapest lane that can still solve this safely?**
-
----
-
-## what beginners should do first
-
-if you are new, do not start by wiring every feature at once.
-
-start with this order:
-
-1. install the run governor  
-2. define max steps, cost, retries, and timeout  
-3. classify your tools into risk buckets  
-4. require approval for external write actions  
-5. enable trace logging  
-6. enable duplicate tool-call detection  
-7. add model routing last  
-
-this gives you a safe baseline quickly.
-
----
-
-## quick mental model
-
-think of the governor as the operating rules for the run.
-
-the model is the brain.
-
-the tools are the hands.
-
-the governor decides:
-
-- how long the brain can think  
-- what the hands are allowed to touch  
-- when to stop  
-- when to ask permission  
-- how to record what happened  
-
-without this layer, you often do not have a reliable operator.
-
-you may just have a chaotic script with a credit card.
-
----
-
-## minimal example
-
-a minimal run might look like this:
-
-```python
-from governor.run_governor import RunGovernor
-
-governor = RunGovernor(
-    max_steps=12,
-    max_cost_usd=0.50,
-    max_llm_calls=8,
-    max_tool_calls=10,
-    max_retries_per_step=2,
-    max_wall_clock_seconds=120,
-    duplicate_tool_call_limit=3
-)
-
-run = governor.start_run(workflow_name="research_task")
-
-while run.active:
-    action = agent.next_action()
-
-    decision = governor.evaluate(action)
-
-    if not decision.allowed:
-        governor.stop_run(reason=decision.reason)
-        break
-
-    result = execute(action)
-    governor.record_step(action=action, result=result)
-
-governor.finalize_run()
-```
-
-see the `examples/simple_agent/` folder for a beginner-friendly runnable example.
-
----
-
-## recommended repo structure
-
-```
-README.md
-architecture.md
-quickstart.md
-run_governor_reference.md
-tool_capabilities.md
-
-governor/
+python/
     run_governor.py
-    model_router.py
-    loop_guard.py
+    example_agent_loop.py
+
+policies/
+    default-medium-risk.json
+    local-free-premium-ladder.json
+    tool_risk_matrix.json
+
+schema/
+    trace_schema.json
+
+sheets/
+    run-ledger.csv
 
 prompts/
-    approval_gate_prompt.md
-    run_scoring_prompt.md
+    approval-gate-prompt.txt
+    run-scorer-prompt.txt
 
-templates/
-    trace_schema.json
-    tool_risk_matrix.json
-    run_ledger_template.json
-    default_governor_config.json
-    approval_policy_examples.json
-
-examples/
-    simple_agent/
-        README.md
-        agent.py
-        governor.py
-        tools.py
-```
+tools/
+    trace_viewer.py
 
 ---
 
-## what success looks like
+# What This Repo Is
 
-after implementing governance like this, your agent should be able to:
+This repo is a **starter governance layer**.
 
-- stop before it spirals  
-- avoid repeating failed tool calls  
-- separate safe actions from risky actions  
-- log every run clearly  
-- score runs for improvement  
-- route tasks to the correct model tier  
-- become cheaper, safer, and easier to debug  
+It is designed to:
 
-that is the difference between a cool demo and something you can trust with real work.
+- show the runtime governance pattern
+- give a minimal working implementation
+- provide reusable policies and prompts
 
----
+It is not a full orchestration framework.
 
-## recommended implementation order
-
-1. install run governor  
-2. define tool risk matrix  
-3. connect approval gate prompt  
-4. log runs using trace schema  
-5. score runs regularly  
-6. tune model routing ladder  
-7. expand capability scoping as workflows grow  
+You are expected to integrate the governor into your own agent workflows.
 
 ---
 
-## why this matters
+# Quick Start
 
-most agent failures in production are predictable:
+See quickstart.md for a minimal example.
 
-- runaway loops  
-- repeated tool retries  
-- wasted token spend  
-- unsafe actions  
-- no traceability  
-- unclear model allocation  
+Python example:
 
-the run governor helps close the gap between:
+python python/example_agent_loop.py
 
-cool demo
+Node example:
 
-and
+node node/exampleAgentLoop.js
 
-something you can actually trust.
+These examples demonstrate:
+
+- step tracking
+- tool call tracking
+- LLM call tracking
+- loop protection
+- cost accounting
+- trace generation
+
+---
+
+# License
+
+MIT
