@@ -27,7 +27,26 @@ The Run Governor adds a safety layer underneath an agent workflow to control how
 
 # What the Governor Controls
 
-# Architecture
+During a run the governor enforces limits and records events.
+
+It answers questions like:
+
+- how many steps can the run take
+- how many tool calls are allowed
+- how many LLM calls are allowed
+- how much money can the run spend
+- when a loop should be stopped
+- which tools are safe to execute
+- how the run should be logged
+- how the run should be scored afterward
+
+Without these controls agents behave like demos.
+
+With them they start behaving like systems.
+
+---
+
+ Architecture
 
 The Run Governor sits between your agent logic and the outside world.
 
@@ -61,24 +80,6 @@ run continues or stops if limits are exceeded
 
 This separation keeps the agent logic simple while the governor handles safety, budgeting, and observability.
 
-During a run the governor enforces limits and records events.
-
-It answers questions like:
-
-- how many steps can the run take
-- how many tool calls are allowed
-- how many LLM calls are allowed
-- how much money can the run spend
-- when a loop should be stopped
-- which tools are safe to execute
-- how the run should be logged
-- how the run should be scored afterward
-
-Without these controls agents behave like demos.
-
-With them they start behaving like systems.
-
----
 
 # Core Ideas
 
