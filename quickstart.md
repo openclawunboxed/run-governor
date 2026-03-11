@@ -1,148 +1,157 @@
-# quickstart
+# Quickstart
 
-this repo is a lightweight starter kit for adding runtime governance to an agent loop.
+This guide runs the governor in under two minutes.
 
-it is meant to be:
+The examples demonstrate the core ideas:
 
-- simple enough for beginners to understand
-- useful enough for advanced users to extend
+- step tracking
+- tool tracking
+- LLM call tracking
+- cost accounting
+- trace logging
 
----
-
-## 1. start with the python or node example
-
-python example:
-
-- `example_agent_loop.py`
-
-node example:
-
-- `exampleAgentLoop.js`
-
-both show the same basic idea:
-
-1. create a governor
-2. record each step
-3. record each tool call
-4. record each llm call
-5. inspect the summary and trace
+You do not need OpenClaw or any external services to run these examples.
 
 ---
 
-## 2. configure safe defaults
+# Step 1 — Clone the repo
 
-use the values in `default-medium-risk.json` as your starting point.
-
-important settings:
-
-- `max_steps`
-- `max_tool_calls`
-- `max_llm_calls`
-- `max_cost_usd`
-- `max_wall_clock_seconds`
-- `max_retries_per_step`
-- `loop_signature_window`
-- `loop_threshold`
-
-do not start with unlimited runs.
+git clone https://github.com/openclawunboxed/run-governor.git  
+cd run-governor
 
 ---
 
-## 3. classify your tools
+# Step 2 — Run the Python example
 
-use `tool_risk_matrix.json`.
+From the repo root run:
 
-start simple:
+python python/example_agent_loop.py
 
-- `read_only`
-- `internal_write`
-- `external_write`
-- `system_exec`
+You should see output similar to:
 
-good beginner rule:
+{
+  "run_id": "abc123",
+  "step_count": 2,
+  "tool_calls": 1,
+  "llm_calls": 1,
+  "cost_usd": 0.015,
+  "elapsed_seconds": 0.3
+}
 
-- read-only tools can often run automatically
-- external write and system tools should usually require approval
+Followed by a trace showing the sequence of events.
 
----
+Example trace events:
 
-## 4. add approval gates
+step  
+tool_call  
+llm_call
 
-use `approval-gate-prompt.txt` for risky actions.
+Each event includes fields like:
 
-good first candidates for approval:
+- run_id
+- step_index
+- event_type
+- tool or model
+- cost
+- timestamp
 
-- sending email
-- posting publicly
-- shell commands
-- deployments
-- payments
-- database writes to production systems
+The event format follows:
 
----
-
-## 5. log traces
-
-use `trace_schema.json` as the standard event format for run events.
-
-minimum useful fields:
-
-- `run_id`
-- `step_index`
-- `event_type`
-- `model`
-- `tool`
-- `arguments`
-- `tool_signature_hash`
-- `tokens`
-- `cost_usd`
-- `timestamp`
-- `status`
-- `summary`
-
-if a run fails and you cannot reconstruct what happened, debugging becomes archaeology.
+schema/trace_schema.json
 
 ---
 
-## 6. score the run after it finishes
+# Step 3 — Run the Node example
 
-use `run-scorer-prompt.txt`.
+From the repo root run:
 
-score the run itself, not just the final answer.
+node node/exampleAgentLoop.js
 
-important dimensions already included:
+You should see similar output to the Python example.
 
-- `goal_completion`
-- `budget_discipline`
-- `tool_relevance`
-- `retry_quality`
-- `escalation_quality`
-- `safety_compliance`
+Both implementations demonstrate the same runtime pattern.
 
 ---
 
-## 7. add model routing last
+# What the Example Shows
 
-use `local-free-premium-ladder.json` after the system is already stable.
+The example agent does three things:
 
-first get the run under control.
+1. records a step
+2. performs a tool call
+3. performs an LLM call
 
-then optimize model allocation.
+During the run the governor:
 
-that order matters.
+- counts steps
+- counts tool calls
+- tracks cost
+- detects repeated tool calls
+- records trace events
+
+If any limit is exceeded the governor stops the run.
 
 ---
 
-## 8. minimum viable beginner setup
+# Next Steps
 
-if you are brand new, do this in order:
+After running the example you can experiment with the configuration.
 
-1. run the example
-2. lower `max_steps`
-3. lower `max_tool_calls`
-4. add one risky tool to approval
-5. log one trace entry per event
-6. inspect the trace after the run
-7. then add model routing
+Lower limits by editing:
 
-that gives you a real first win without needing to understand the whole stack at once.
+policies/default-medium-risk.json
+
+Reduce values like:
+
+max_steps  
+max_tool_calls  
+max_llm_calls  
+max_cost_usd  
+
+Then run the example again.
+
+---
+
+# Changing Tool Risk Levels
+
+Edit:
+
+policies/tool_risk_matrix.json
+
+Move tools between:
+
+read_only  
+internal_write  
+external_write  
+system_exec  
+
+This lets you test approval policies.
+
+---
+
+# Inspecting Traces
+
+Traces follow the schema:
+
+schema/trace_schema.json
+
+You can visualize them using the trace viewer:
+
+python tools/trace_viewer.py trace.json
+
+This prints a readable timeline of the run.
+
+---
+
+# What This Starter Kit Does Not Do
+
+This repo intentionally stays small.
+
+It does not include:
+
+- full agent orchestration
+- automatic approval workflows
+- automatic run scoring
+- full model routing systems
+
+Instead it provides the core primitives needed to build those systems safely.
