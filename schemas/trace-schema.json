@@ -1,27 +1,56 @@
 {
-  "title": "agent_run_trace",
+  "title": "governor_trace_event",
   "type": "object",
   "required": [
     "run_id",
-    "workflow_name",
-    "agent_name",
-    "steps"
+    "step_index",
+    "event_type",
+    "timestamp",
+    "status"
   ],
   "properties": {
     "run_id": {
       "type": "string"
     },
-    "workflow_name": {
+    "step_index": {
+      "type": "integer"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": ["step", "tool_call", "llm_call", "retry"]
+    },
+    "step_name": {
       "type": "string"
     },
-    "agent_name": {
+    "model": {
       "type": "string"
     },
-    "steps": {
-      "type": "array"
-    },
-    "final_status": {
+    "tool": {
       "type": "string"
+    },
+    "arguments": {
+      "type": "object"
+    },
+    "tool_signature_hash": {
+      "type": "string"
+    },
+    "tokens": {
+      "type": "integer"
+    },
+    "cost_usd": {
+      "type": "number"
+    },
+    "timestamp": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "retry_count": {
+      "type": "integer"
     }
   }
 }
